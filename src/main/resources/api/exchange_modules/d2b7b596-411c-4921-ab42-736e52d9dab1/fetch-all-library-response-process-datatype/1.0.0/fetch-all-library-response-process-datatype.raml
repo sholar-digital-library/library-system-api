@@ -1,0 +1,31 @@
+#%RAML 1.0 DataType
+
+description: This datatype is for the response payload for the fetch all the library details in process layer
+
+type: object
+properties:
+  libraries:
+    type: array
+    items:
+      type: object
+      properties:
+        library_code:
+          type: string
+          required: true
+          example: "LIB123"
+        library_branch:
+          type: string
+          required: true
+          example: "Madhapur"
+        total_books:
+          type: number
+          required: true
+          example: 100
+        available_books:
+          type: number
+          required: true
+          example: 65
+        books_rented:
+          type: number
+          required: true
+          example: 35

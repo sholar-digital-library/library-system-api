@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="add-library-system-test-suite.xml" />
+	
+	<munit:test name="add-library-system-test-suite-post:\library-system:application\json:library-system-api-configTest" doc:id="919de60c-c629-41db-9e9b-140f97410bcd" description="library added successfully with admin role">
+		
+		<munit:behavior >
+		
+			<munit-tools:mock-when doc:name="Mock when Request for user validation" doc:id="3bb51c3a-0a56-44b0-b1fe-739f517e3111" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="51959c4d-c8a5-4ed5-ab56-ab26985d9a82" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="user_data" value="#[readUrl('classpath://validate user-ADMIN.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when select the numeric number" doc:id="976a1068-05a4-47ff-8cec-c763e1a8b460" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="ca6ce8cc-2d73-4189-83f2-21220591c4a8" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[[{latest_numeric_number:110}]]" mediaType="application/java" encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			
+			<munit-tools:mock-when doc:name="Mock when update numeric number" doc:id="fffe01d3-a468-417f-ac30-418c13ba5be5" processor="db:update">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="8ef1f878-ce5e-4dfd-bd23-6d6921d8ca26" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#['org.mule.extension.db.api.StatementResult@3b4833ab']" mediaType="application/java" encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			
+			<munit-tools:mock-when doc:name="Mock when insert library details" doc:id="78a23250-afb2-4be8-bb40-cd4dca3a7956" processor="db:insert">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="11071e11-877a-4a22-867b-fa635c6d110d" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#['org.mule.extension.db.api.StatementResult@110a55fc']" mediaType="application/java" encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			
+		</munit:behavior>
+		
+		<munit:execution >
+		
+			<munit:set-event doc:name="Set Event for add library" doc:id="d4497706-05f6-43d0-9644-1518365cb6eb" >
+				<munit:payload value="#[readUrl('classpath://add-update-request-payload.dwl')]" encoding="UTF-8" mediaType="application/json" />
+			</munit:set-event>
+			
+			<flow-ref doc:name="Flow-ref to post:\library-system:application\json:library-system-api-config" doc:id="9f3f7aca-ce96-4b21-95f4-ec7f3048d3c9" name="post:\library-system:application\json:library-system-api-config"/>
+	
+		</munit:execution>
+		
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals for add library" doc:id="8517eb51-314a-450d-96ef-10cf6c188c42" actual="#[payload]" expected="#[readUrl('classpath://add-response.dwl')]" message="The add new library is success !"/>
+		</munit:validation>
+		
+	</munit:test>
+	<munit:test name="add-library-system-test-suiteTest" doc:id="c782ba52-1fe5-4020-858b-6cb45f19b3bf" description="add library with student or user role" expectedErrorType="USER:INVALID" expectedErrorDescription="You don't have access :(">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when Request for user validation" doc:id="479f8e9e-7ed0-4a25-8dfd-adfff3b4e522" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="51959c4d-c8a5-4ed5-ab56-ab26985d9a82" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="user_data" value="#[readUrl('classpath://validate user-STUDENT.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event for add library" doc:id="a03d2340-098a-4b46-8f6d-43b9c36051f6" >
+				<munit:payload value="#[readUrl('classpath://add-update-request-payload.dwl')]" encoding="UTF-8" mediaType="application/json" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to post:\library-system:application\json:library-system-api-config" doc:id="5c7bdd0c-77f1-4154-b366-de6b2713513f" name="post:\library-system:application\json:library-system-api-config" />
+		</munit:execution>
+	</munit:test>
+
+</mule>

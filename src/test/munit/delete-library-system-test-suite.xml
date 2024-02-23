@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="delete-library-system-test-suite.xml" />
+	
+	<munit:test name="delete-library-system-test-suite-delete:\library-system:library-system-api-configTest" doc:id="2009c5f4-adcf-4b27-b6a1-6f0369019e9a" description="library deleting sucess">
+		
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when validating user" doc:id="5f76c9c6-5d19-4852-b946-8b16a274c674" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="1212a10c-a48b-4bab-99b0-bc139b5a47da" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="user_data" value="#[readUrl('classpath://validate user-ADMIN.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when fecth library based on library code" doc:id="3150dd62-8859-474f-943c-11c3043fca6e" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="f8de223b-1d83-4f5d-819c-e5e982b5051c" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[readUrl('classpath://fetch-library-based-library-code.dwl')]" mediaType="application/java" encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			
+			<munit-tools:mock-when doc:name="Mock when delete the library based on library code" doc:id="f0cf5a16-e266-4c3e-9c1e-6e9e6f21e8d9" processor="db:delete">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="a3b60e49-edac-4609-8baf-7067b3b39cef" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[1]" mediaType="application/java" encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			
+		</munit:behavior>
+		
+		<munit:execution >
+		
+			<munit:set-event doc:name="Set Event for delete library" doc:id="f941c352-5c49-4351-87d7-fa2e9500e13b" >
+				<munit:attributes value="#[{ queryParams : {library_code : 'LID110'} }]" encoding="UTF-8" mediaType="application/java" />
+			</munit:set-event>
+			
+			<flow-ref doc:name="Flow-ref to delete:\library-system:library-system-api-config" doc:id="df91fd59-4fbd-48f3-97f0-498d0e9e9f93" name="delete:\library-system:library-system-api-config"/>
+		
+		</munit:execution>
+		
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals for delete library" doc:id="8bca6752-0167-497b-8dd5-2e5743f6b7fb" actual="#[payload]" expected="#[readUrl('classpath://delete-response.dwl')]" message="Delete library based on library code is success !"/>
+		</munit:validation>
+		
+	</munit:test>
+	
+	<munit:test name="delete-library-system-error-test-suiteTest" doc:id="1a177f7a-5603-4951-b3f6-7ba1cbc3e411" description="While deleteing library library:not_found error raise" expectedErrorType="LIBRARY:NOT_FOUND" expectedErrorDescription="The library code is not found !!">
+		
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="delete:\library-system:library-system-api-config" />
+		</munit:enable-flow-sources>
+		
+		<munit:behavior >
+		
+			<munit-tools:mock-when doc:name="Mock when validating user" doc:id="772a7952-b99c-4c17-a758-ba54ec2db277" processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute whereValue="1212a10c-a48b-4bab-99b0-bc139b5a47da" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:variables>
+						<munit-tools:variable key="user_data" value="#[readUrl('classpath://validate user-ADMIN.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when fecth library based on library code" doc:id="6a6159a1-92e2-4b78-9122-f6f12d572ead" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="f881ce8d-3ed6-4262-ad76-52d9e3e778c0" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[[]]" mediaType="application/java" encoding="UTF-8" />
+				</munit-tools:then-return>		
+			</munit-tools:mock-when>
+			
+		
+</munit:behavior>
+		
+		<munit:execution >
+		
+			<munit:set-event doc:name="Set Event for delete library error" doc:id="db5315e3-0681-4adf-be93-68156f01abf6" >
+				<munit:attributes value="#[{ queryParams : {library_code : 'LID110'} }]" encoding="UTF-8" mediaType="application/java" />
+			</munit:set-event>
+			
+			<flow-ref doc:name="Flow-ref to delete:\library-system:library-system-api-config" doc:id="ecc6543a-7792-495c-980f-c35a7d7eef21" name="delete:\library-system:library-system-api-config"/>
+		
+		</munit:execution>
+		
+	</munit:test>
+	<munit:test name="delete-library-system-test-suiteTest" doc:id="b0b1d930-c5da-4125-abfe-4b5225212ccc" description="While deleting library user:invalid error raise" expectedErrorType="USER:INVALID" expectedErrorDescription="You don't have access :(">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when validating user" doc:id="f4714be6-8fa6-4c5f-9a2d-6f921af8d8f6" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="1212a10c-a48b-4bab-99b0-bc139b5a47da" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="user_data" value="#[readUrl('classpath://validate user-STUDENT.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event for delete library error" doc:id="ddd53b8d-4bfe-45ab-b144-f06d00ba52ef" >
+				<munit:attributes value="#[{ queryParams : {library_code : 'LID110'} }]" encoding="UTF-8" mediaType="application/java" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to delete:\library-system:library-system-api-config" doc:id="624a8aed-ac0d-4176-a062-4692a439ea3a" name="delete:\library-system:library-system-api-config" />
+		</munit:execution>
+	</munit:test>
+
+
+</mule>

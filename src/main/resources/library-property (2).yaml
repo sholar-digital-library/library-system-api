@@ -1,0 +1,19 @@
+"http" : 
+  "port" : "8081"
+  "base_path" : "/scholar-digital-library-system"
+  
+"db" :
+  "username" : "poc1234"
+  "password" : "poc1234567"
+  "host" : "db4free.net"
+  "port" : "3306"
+  "database" : "scholarlibraries"
+  
+"user-process-api" : 
+  "host" : "user-process-api.us-e2.cloudhub.io"
+  "port" : "80"
+  "base_path" : "user-process-api"
+  "validate-user" : "validate-user"
+  "client-id" : "d7ccfd0ae49a41f29ca31351c828da3b"
+  "client-secret" : "5f97D63a46a9470Aa22b1966A85659b1"
+  

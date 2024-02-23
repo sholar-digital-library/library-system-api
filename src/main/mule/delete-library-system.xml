@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	
+		<flow name="delete:\library-system:library-system-api-config">
+        <logger level="INFO" doc:name="Start" doc:id="3a44e863-6126-4917-ba6d-1c055735920b" message="Enter into delete library flow !"/>
+		<logger level="INFO" doc:name="set library code as variable" doc:id="93ce9065-cfdb-4520-84e5-9ac9fa80bdd5" message="Setting library code as variable "/>
+		<set-variable value="#[attributes.queryParams.library_code]" doc:name="library_code variable" doc:id="1cd67e6a-c47c-4e82-b417-c7f514b07b09" variableName="library_code"/>
+		<logger level="INFO" doc:name="validate user" doc:id="2662bbdc-a58f-49af-b57e-87d2415def72" message="Requesting for validate user"/>
+		<http:request method="GET" doc:name="Request for validate user" doc:id="1212a10c-a48b-4bab-99b0-bc139b5a47da" config-ref="HTTP_Request_configuration_for_user_process_api" path="/${user-process-api.validate-user}" target="user_data">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "Value",
+	"client_id" : "Value"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"corelation-id" : attributes.headers."correlation-id"
+}]]]></http:query-params>
+		</http:request>
+		<choice doc:name="Choice" doc:id="855fe4a9-6566-47d6-bff2-3b832b1685a2" >
+			<when expression="#[upper(vars.user_data.user_role) == 'ADMIN']">
+				<logger level="INFO" doc:name="Role of user" doc:id="4ea19e6e-1e11-4646-9ac7-2d278108b8c4" message="User role is ADMIN"/>
+				<logger level="INFO" doc:name="select library based on library code" doc:id="7e6f4b4c-ceb7-439e-be80-69253f59ae9a" message="Fetching library details based on the library code" />
+				<db:select doc:name="Select library details based on library_code" doc:id="f8de223b-1d83-4f5d-819c-e5e982b5051c" config-ref="Database_configuration_for_library_system_api">
+			<db:sql><![CDATA[SELECT * from scholarlibraries.library WHERE library_code = :library_code;]]></db:sql>
+			<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	library_code: vars.library_code
+}]]]></db:input-parameters>
+		</db:select>
+				<logger level="INFO" doc:name="make choice" doc:id="1157d6d1-15e3-46e2-9c06-d12d7a0f8f77" message="Making choice based on the library exist or not !" />
+				<choice doc:name="Choice" doc:id="af537819-38ee-4ef5-9b97-edc2e2b704dc">
+			<when expression="#[payload != []]">
+				<logger level="INFO" doc:name="library exist !" doc:id="bcebcf30-4255-4f2c-b189-722b93e45a24" message="The library details is found " />
+				<logger level="INFO" doc:name="delete library" doc:id="ab153fec-b31f-4a04-b585-341fc37dcb46" message="deleting library details" />
+				<db:delete doc:name="Delete library details based on library_code" doc:id="a3b60e49-edac-4609-8baf-7067b3b39cef" config-ref="Database_configuration_for_library_system_api">
+					<db:sql><![CDATA[DELETE FROM scholarlibraries.library WHERE library_code = :library_code;]]></db:sql>
+					<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	library_code: vars.library_code
+}]]]></db:input-parameters>
+				</db:delete>
+				<logger level="INFO" doc:name="library deleted " doc:id="11815224-235b-49a5-9e27-c87238df5afb" message="The library is deleted based on library code " />
+				<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  	library_code: vars.library_code as String,
+	message: "Library details deleted successfully !"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="library not exist" doc:id="7d6167c8-3552-4f09-bd0d-b45ac132632a" message="The library is not found based on library code" />
+				<raise-error doc:name="Raise error for library not found" doc:id="1de5c7a9-17b1-4f0a-9a50-81aa35b147cc" type="LIBRARY:NOT_FOUND" description="The library code is not found !!" />
+			</otherwise>
+		</choice>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Role of user" doc:id="878076d2-8cee-4f20-a2e6-20bf882bbdd8" message="User role may be STUDENT or USER"/>
+				<raise-error doc:name="Raise error for invalid user" doc:id="46e555fa-9f45-4e8e-8b9a-99d6dfe9d92a" type="USER:INVALID" description="You don't have access :("/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End " doc:id="4940d6f6-2d59-4c14-a595-2f21f83ae1e5" message="Return from the delete libraray flow !"/>
+    
+</flow>
+	
+</mule>

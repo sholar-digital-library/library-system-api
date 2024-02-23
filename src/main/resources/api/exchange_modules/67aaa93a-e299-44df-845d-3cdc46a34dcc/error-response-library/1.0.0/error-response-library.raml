@@ -1,0 +1,15 @@
+#%RAML 1.0 Trait
+
+description: For the error response of the library process and system api
+
+responses:
+  404:
+    description: If the library is not present
+    body:
+      application/json:
+        example: !include examples/404-error-response.json       
+  500:
+    description: If something went wrong while updating library details
+    body:
+      application/json:
+        example: !include examples/500-error-response.json

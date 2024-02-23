@@ -1,0 +1,80 @@
+#%RAML 1.0
+title: library-system-api
+
+description: This api is for the system api layer of the library related process
+baseUri: http://localhost:8081/scholar-digital-library-system
+
+traits:
+  library-code-qp: !include exchange_modules/d2b7b596-411c-4921-ab42-736e52d9dab1/library-code/1.0.0/library-code.raml
+  error-response: !include exchange_modules/d2b7b596-411c-4921-ab42-736e52d9dab1/library-error-response/1.0.0/library-error-response.raml
+  security-schema: !include exchange_modules/d2b7b596-411c-4921-ab42-736e52d9dab1/custome-security-schema/1.0.0/custome-security-schema.raml
+
+uses:
+  Lib: exchange_modules/d2b7b596-411c-4921-ab42-736e52d9dab1/library-datatypes/1.0.1/library-datatypes.raml
+
+
+/library-system:
+  post:
+    is:
+      [error-response,security-schema]
+    description: To add the new library
+    body:
+      application/json:
+        type: Lib.add-update-request-system
+        example: !include examples/add-update-request-system.json
+    responses:
+      200:
+        description: If the library is added successfully
+        body:
+          application/json:
+            type: Lib.add-update-delete-200-response-system
+            example: !include examples/add-update-delete-200-response-system.json
+  put:
+    is:
+      [error-response,library-code-qp,security-schema]
+    description: To update the library details
+    body:
+      application/json:
+        type: Lib.add-update-request-system
+        example: !include examples/add-update-request-system.json
+    responses:
+      200:
+        description: If the library is present and updated successfuly
+        body:
+          application/json:
+            type: Lib.add-update-delete-200-response-system
+            example: !include examples/add-update-delete-200-response-system.json
+  delete:
+    is:
+      [error-response,library-code-qp,security-schema]
+    description: It is for delete the library based in library_code
+    responses:
+      200:
+        description: If the library details deleted successfully !
+        body:
+          application/json:
+            type: Lib.add-update-delete-200-response-system
+            example: !include examples/add-update-delete-200-response-system.json
+  get:
+    is:
+      [error-response,library-code-qp,security-schema]
+    description: For fetching the single library details based on library_code
+    responses:
+      200:
+        description: If library is present return the library details
+        body:
+          application/json:
+            type: Lib.fetch-single-library-response-system
+            example: !include examples/fetch-single-library-system.json
+/libraries-system:
+  get:
+    is:
+      [error-response,security-schema]
+    description: for fetching all the library details list
+    responses:
+      200:
+        description: Return the list of all libraries
+        body:
+          application/json:
+            type: Lib.fetch-all-library-response-system
+            example: !include examples/fetch-all-library-system.json
