@@ -1,0 +1,27 @@
+#%RAML 1.0 DataType
+
+description: This statype is for the response payload for fetch all the libraries in system api layer
+type: array
+items:
+  type: object
+  properties:
+    library_code:
+      type: string
+      required: true
+      example: "LID101"
+    library_branch_name:
+      type: string
+      required: true
+      example: "vizag"
+    library_phone_no:
+      type: number
+      required: true
+      example: 789456123
+    library_email:
+      type: string
+      required: true
+      example: "vizaglibrary@schoolar.com"
+    address:  
+      type: string
+      required: true
+      example: "oppsite to HDFC bank"

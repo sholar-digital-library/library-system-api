@@ -1,0 +1,14 @@
+#%RAML 1.0 Trait
+
+description: Client id and client secret to be sent in each Request while calling the library API
+
+headers:
+    client-id: 
+      type: string
+      required: true
+    client-secret:
+      type: string
+      required: true
+    correlation-id:
+      type: string
+      required: true

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="put:\library:application\json:library-system-config">
+        <logger level="INFO" doc:name="Start" doc:id="f30d0b35-f04c-4bb7-8bdb-6670becd7e62" message="Enter into update library flow"/>
+		<set-variable value="#[attributes.queryParams.library_code]" doc:name="library_code variable" doc:id="d5fbd09d-814b-49de-bceb-e40c65029019" variableName="library_code" />
+		<set-variable value="#[payload]" doc:name="library data as variable" doc:id="4667bf03-db48-4103-a525-0b0590986fe6" variableName="library_data"/>
+		<db:select doc:name="Select" doc:id="a222591a-8741-41fa-811e-81d2abee7570" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * from scholarlibraries.library WHERE library_code = :library_code;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	library_code: vars.library_code
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="c2caf0f9-6a8e-45b0-97f5-85175da8771e" >
+			<when expression="#[payload != []]">
+				<db:update doc:name="Update library details based on library_code" doc:id="3181a200-1a8c-413c-99d6-cf8237a40c04" config-ref="Database_Config">
+			<db:sql><![CDATA[UPDATE scholarlibraries.library SET library_branch_name=:library_branch_name,library_phone_no=:library_phone_no,library_email=:library_email,address=:address WHERE library_code=:library_code;]]></db:sql>
+			<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	library_code: vars.library_code,
+	library_email: vars.library_data.library_email,
+	address: vars.library_data.address,
+	library_branch_name: vars.library_data.library_branch_name,
+	library_phone_no: vars.library_data.library_phone_no as String
+}]]]></db:input-parameters>
+		</db:update>
+				<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	library_code: vars.library_code,
+	message: "Library details updated successfully !"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise >
+				<raise-error doc:name="Raise error" doc:id="b70fa6ee-c28b-484e-8d43-e83efbb35c82" type="LIBRARY:NOT_FOUND" description="The library code is not found !!"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="0cc3db5f-bd3d-465e-b322-94176dd4a84b" message="Return from update libvrary flow"/>
+    
+</flow>	
+</mule>

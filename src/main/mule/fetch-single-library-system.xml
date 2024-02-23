@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	
+	<flow name="get:\library-system:library-system-api-config" doc:id="2ea6781d-8162-4a2f-9699-a18f401a2023">
+        <logger level="INFO" doc:name="Start" doc:id="852dffdb-2bb9-4b31-8b77-b75c4d67cd86" message="Enter into fetch single library flow"/>
+		<logger level="INFO" doc:name="slecting the library" doc:id="6e534150-6807-4dce-bdd5-7e52069ade45" message="Selecting the library deatils based on the library code = #[attributes.queryParams.library_code]"/>
+		<db:select doc:name="Select library details based on library_code" doc:id="e605313b-73fd-4950-aa73-8f5cc3458b89" config-ref="Database_configuration_for_library_system_api">
+			<db:sql ><![CDATA[SELECT * FROM scholarlibraries.library WHERE library_code = :library_code;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	library_code: attributes.queryParams.library_code
+}]]]></db:input-parameters>
+		</db:select>
+		<logger level="INFO" doc:name="Make choice" doc:id="bec46876-54fe-47e9-bba4-96d2ad1acf9c" message="Making choice based on the library exist ot not !"/>
+		<choice doc:name="Choice" doc:id="65f9fc2e-1f6a-4a93-8554-df3a3760ac4b" >
+			<when expression="#[payload != []]">
+				<logger level="INFO" doc:name="Library exist " doc:id="8024e5c7-bd62-485d-aa56-8315e5372d8e" message="The library is found based on library code"/>
+				<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	library_code: payload[0].library_code,
+	library_email: payload[0].library_email,
+	address: payload[0].address,
+	library_branch_name: payload[0].library_branch_name,
+	library_phone_no: payload[0].library_phone_no
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="librray not exist " doc:id="272e9d81-1ebc-4d71-b4b1-f4977b43f146" message="The library is not found based on the library code"/>
+				<raise-error doc:name="Raise error for library not found" doc:id="170a02e4-557e-4c63-88a5-5adbec627703" type="LIBRARY:NOT_FOUND" description="The library code is not found !!"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End " doc:id="e284b21c-91bb-4dc3-b33c-44f47b47131f" message="Return from the fetch single library flow"/>
+    
+</flow>
+		
+</mule>

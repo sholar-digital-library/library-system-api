@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+
+	<db:config name="Database_configuration_for_library_system_api" doc:name="Database Config" doc:id="18effbfb-cd29-4477-884d-eee509fc72ae" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.username}" password="${db.password}" database="${db.database}" />
+	</db:config>
+	<http:request-config name="HTTP_Request_configuration_for_user_process_api" doc:name="HTTP Request configuration" doc:id="a263e83b-ec33-4d4c-a895-576f5f401836" basePath="/${user-process-api.base_path}" >
+		<http:request-connection host="${user-process-api.host}" port="${user-process-api.port}" />
+	</http:request-config>
+	<flow name="post:\library-system:application\json:library-system-api-config">
+        <logger level="INFO" doc:name="Start" doc:id="ab64eaff-06a7-4ffe-9cfa-2e1ca5a3eb28" message="Enter into add library flow"/>
+		<set-variable value="#[payload]" doc:name="library data setting as variable" doc:id="a538d8a6-1562-4419-b950-35f2c51d3470" variableName="library_details"/>
+		<logger level="INFO" doc:name="Validating user" doc:id="995a1842-cf38-457f-af05-1aaa0d738fba" message="Reqesting for validate user"/>
+		<http:request method="GET" doc:name="Request for validating user" doc:id="51959c4d-c8a5-4ed5-ab56-ab26985d9a82" config-ref="HTTP_Request_configuration_for_user_process_api" path="/${user-process-api.validate-user}" target="user_data">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "Value",
+	"client_id" : "Value"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"corelation-id" : attributes.headers."correlation-id"
+}]]]></http:query-params>
+		</http:request>
+		<choice doc:name="Choice" doc:id="dc2040af-3104-4fc2-bdef-f81e90bb344f" >
+			<when expression="#[upper(vars.user_data.user_role) == 'ADMIN']">
+				<logger level="INFO" doc:name="Role of user" doc:id="650d6a51-3b95-441a-8ee6-c9a2feb4bf6c" message="The user is  ADMIN"/>
+				<logger level="INFO" doc:name="inserting details into database process start" doc:id="577ee247-a841-42a2-8f15-c3ba5974f158" message="inserting library details in databse process start " />
+				<logger level="INFO" doc:name="select latest numeric code" doc:id="fae6fd7b-8ebc-42e0-9699-3ce8e8e6afb2" message="selecting latest numeric code from databse for Library_code" />
+				<db:select doc:name="Select the latest numeric number for library_code" doc:id="ca6ce8cc-2d73-4189-83f2-21220591c4a8" config-ref="Database_configuration_for_library_system_api">
+			<db:sql><![CDATA[SELECT latest_numeric_number from scholarlibraries.primary_key_manager WHERE table_name='libraries';]]></db:sql>
+		</db:select>
+				<set-variable value="#[payload[0].latest_numeric_number + 1]" doc:name="Set Variable for new numeric number" doc:id="9857ffea-00a2-4407-85da-2aefde105dd5" variableName="new_numeric_number" />
+				<logger level="INFO" doc:name="update numeric number" doc:id="5faf34a1-a504-4f76-add9-5249550c4e08" message="updating the numeric number by one in databse" />
+				<db:update doc:name="Update the new numeric number" doc:id="8ef1f878-ce5e-4dfd-bd23-6d6921d8ca26" config-ref="Database_configuration_for_library_system_api">
+			<db:sql><![CDATA[UPDATE scholarlibraries.primary_key_manager SET latest_numeric_number=:new_numeric_number WHERE table_name='libraries';]]></db:sql>
+			<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	new_numeric_number: vars.new_numeric_number
+}]]]></db:input-parameters>
+		</db:update>
+				<logger level="INFO" doc:name="insert library details" doc:id="26bf58e4-a80d-43e4-bd46-36e9e89c20f0" message="Insering library details to database with library_code" />
+				<db:insert doc:name="insert the library details to db" doc:id="11071e11-877a-4a22-867b-fa635c6d110d" config-ref="Database_configuration_for_library_system_api">
+			<db:sql><![CDATA[INSERT INTO scholarlibraries.library (library_code,library_branch_name,library_phone_no,library_email,address) VALUES (CONCAT('LID', :library_code),:library_branch_name,:library_phone_no,:library_email,:address);]]></db:sql>
+			<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	library_email: vars.library_details.library_email,
+	address: vars.library_details.address,
+	library_code: vars.new_numeric_number as String,
+	library_branch_name: vars.library_details.library_branch_name,
+	library_phone_no: vars.library_details.library_phone_no
+}]]]></db:input-parameters>
+		</db:insert>
+				<logger level="INFO" doc:name="insert complete" doc:id="4dcdab1a-50ce-443f-99bd-c7e90a6c84b5" message="The library details insertion completed !!" />
+				<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  	ibrary_code: "LID" ++ vars.new_numeric_number as String,
+	message: "Library details added successfully !"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Role of user" doc:id="725aa51f-30c7-45f8-aada-b0bce3304471" message="The user is may be STUDENT or USER"/>
+				<raise-error doc:name="Raise error for invalid user" doc:id="aa02170e-3513-4574-829e-708a5c3227ce" type="USER:INVALID" description="You don't have access :("/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="7f0bab86-7103-4460-bcde-12f51bc4e49e" message="Return form add library flow !"/>
+    
+</flow>
+	
+</mule>

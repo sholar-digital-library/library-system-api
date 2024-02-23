@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	
+	<flow name="get:\libraries-system:library-system-api-config" doc:id="d06c166d-8273-4b27-9d0f-8bdc4d75ac1c">
+        <logger level="INFO" doc:name="Start" doc:id="583f132c-7234-48c5-b924-d358c525c471" message="Enter into fetch all library flow"/>
+		<logger level="INFO" doc:name="select all library" doc:id="921c9fbc-328f-42e8-be99-b23c02874d73" message="Fetching all the library from the database"/>
+		<db:select doc:name="Select all the library details " doc:id="34af7021-0792-4278-adfa-1580250d9dab" config-ref="Database_configuration_for_library_system_api">
+			<db:sql ><![CDATA[SELECT * FROM scholarlibraries.library;]]></db:sql>
+		</db:select>
+		<logger level="INFO" doc:name="make choice" doc:id="8156531d-87b7-4537-8b7e-729381366ba8" message="Making choice that libraries are presnt or not"/>
+		<choice doc:name="Choice" doc:id="fa4a9ee4-bb7f-4d8c-8b50-56886d46efec" >
+			<when expression="#[payload != []]">
+				<logger level="INFO" doc:name="Libraries are there" doc:id="95a04168-a98d-407c-84a1-5ab1727c09bf" message="Libraries are found"/>
+				<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	library_code: payload01.library_code,
+	library_email: payload01.library_email,
+	address: payload01.address,
+	library_branch_name: payload01.library_branch_name,
+	library_phone_no: payload01.library_phone_no
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="libraries are not there" doc:id="3f512a40-f84f-4145-8dee-b63a680debb4" message="Libraries are not found"/>
+				<raise-error doc:name="Raise error for libraries ae not found" doc:id="908f6a3b-3594-4c5b-af80-b9fc1810ae5e" type="LIBRARY:NOT_FOUND" description="No records found !!"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="a5bfd07b-06e0-40f8-bf86-74669549fead" message="Return from fetch all library flow !"/>
+    
+</flow>	
+	
+</mule>

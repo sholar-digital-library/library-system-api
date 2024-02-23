@@ -1,0 +1,23 @@
+[
+  {
+    "library_code":"LID101",
+    "library_branch_name":"vizag",
+    "library_phone_no":7894561235,
+    "library_email":"vizaglibrary@schoolar.com",
+    "address":"oppsite to HDFC bank"
+  },
+  {
+    "library_code":"LID102",
+    "library_branch_name":"hydrabad",
+    "library_phone_no":7894561235,
+    "library_email":"hydrabadlibrary@schoolar.com",
+    "address":"oppsite to HDFC bank"
+  },  
+  {
+    "library_code":"LID103",
+    "library_branch_name":"banglore",
+    "library_phone_no":7894561235,
+    "library_email":"banglorelibrary@schoolar.com",
+    "address":"oppsite to HDFC bank"
+  }
+]

@@ -1,0 +1,13 @@
+#%RAML 1.0 DataType
+
+description: this data type is for the response payload of add,update and delete library
+type: object
+properties:
+  library_code:
+    type: string
+    required: true
+    example: "LID102"
+  message:
+    type: string
+    required: true
+    example: "Library added successfully !"

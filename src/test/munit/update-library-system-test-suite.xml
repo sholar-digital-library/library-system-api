@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="update-library-system-test-suite.xml" />
+	<munit:test name="update-library-system-test-suite-put:\library-system:application\json:library-system-api-configTest" doc:id="b3897a3b-a144-4acf-a252-a04a0a7e0363" description="updating library based on library code success">
+		
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when validating user" doc:id="48c696a6-5b53-4d79-95b9-4a70c924ff9e" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="4d06d11e-d4ca-4ef5-ad18-7b9d2d8da441" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="user_data" value="#[readUrl('classpath://validate user-ADMIN.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when fecth library based on library code" doc:id="550d3f90-fa2d-4d7c-bc37-678b222148fa" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="f881ce8d-3ed6-4262-ad76-52d9e3e778c0" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[readUrl('classpath://fetch-library-based-library-code.dwl')]" mediaType="application/java" encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when update library based on library code" doc:id="6e355782-1e5d-4068-9577-6ef910bf65be" processor="db:update">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="788c861a-cfef-4851-9c2e-323003158e21" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#['org.mule.extension.db.api.StatementResult@2124867e']" mediaType="application/java" encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		
+		<munit:execution >
+		<munit:set-event doc:name="Set Event for update library" doc:id="3e19c27d-6cb0-4661-808e-0ee1ea5833b2" >
+				<munit:payload value="#[readUrl('classpath://add-update-request-payload.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[{ queryParams : { library_code : 'LID110'} }]" encoding="UTF-8" mediaType="application/java" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to put:\library-system:application\json:library-system-api-config" doc:id="3ac98a96-eefb-4c94-9b5b-160c488f53b6" name="put:\library-system:application\json:library-system-api-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals for update library" doc:id="8043c41f-410a-4717-b94f-abac34bd3e91" actual="#[payload]" expected="#[readUrl('classpath://update-response.dwl')]" message="Update the library details based on library code is success !"/>
+	</munit:validation>
+	</munit:test>
+	<munit:test name="update-library-system-test-suiteTest" doc:id="0d82b91f-c48f-4aa9-8297-c8587402f56d" description="while updating libvrary based on library code library:not_found error raise" expectedErrorType="LIBRARY:NOT_FOUND" expectedErrorDescription="The library code is not found !!">
+	
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when validating user" doc:id="1fbe522e-1ccf-4fd9-8cfd-bea177335df6" processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute whereValue="4d06d11e-d4ca-4ef5-ad18-7b9d2d8da441" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:variables>
+						<munit-tools:variable key="user_data" value="#[readUrl('classpath://validate user-ADMIN.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when fecth library based on library code" doc:id="4208dd04-31c6-445a-b0c3-c63ffd076f7e" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="f881ce8d-3ed6-4262-ad76-52d9e3e778c0" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[[]]" mediaType="application/java" encoding="UTF-8" />
+				</munit-tools:then-return>
+			
+	</munit-tools:mock-when>
+		
+</munit:behavior>
+		
+		<munit:execution >
+			<munit:set-event doc:name="Set Event for update library error" doc:id="c6d73891-84e1-4cc8-8a44-f031bc96a947" >
+				<munit:payload value="#[readUrl('classpath://add-update-request-payload.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[{ queryParams : { library_code : 'LID110'} }]" encoding="UTF-8" />
+			
+</munit:set-event>
+			<flow-ref doc:name="Flow-ref to put:\library-system:application\json:library-system-api-config" doc:id="a3929264-4b16-4994-bdc0-1f30b0739e26" name="put:\library-system:application\json:library-system-api-config"/>
+		</munit:execution>
+	
+	</munit:test>
+	<munit:test name="update-library-system-test-suiteTest1" doc:id="3ab85caf-3e56-4311-8dff-2fd1904ec751" description="while updating library based on library code user:invaild error raise" expectedErrorType="USER:INVALID" expectedErrorDescription="You don't have access :(">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when validating user" doc:id="14032626-28e5-46d5-b213-9bbf78bfbe85" processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute whereValue="4d06d11e-d4ca-4ef5-ad18-7b9d2d8da441" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:variables>
+						<munit-tools:variable key="user_data" value="#[readUrl('classpath://validate user-STUDENT.dwl')]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Event for update library error" doc:id="5701d12c-b020-4ddf-820e-655dc1a3b14a">
+				<munit:payload value="#[readUrl('classpath://add-update-request-payload.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[{ queryParams : { library_code : 'LID110'} }]" encoding="UTF-8" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to put:\library-system:application\json:library-system-api-config" doc:id="ecf52551-f367-415b-9aa3-37556c72f686" name="put:\library-system:application\json:library-system-api-config" />
+		</munit:execution>
+	</munit:test>
+
+	
+</mule>

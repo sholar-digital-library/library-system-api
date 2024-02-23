@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="fetch-all-library-system-test-suite.xml" />
+	
+	<munit:test name="fetch-all-library-system-test-suite-get:\libraries-system:library-system-api-configTest" doc:id="ab1a6a98-65cb-4310-be73-200722c2c6b9" description="fetch all the library success">
+		
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when select all libraries" doc:id="e2697161-260e-4576-96ef-b1c58927b542" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="34af7021-0792-4278-adfa-1580250d9dab" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[readUrl('classpath://fetch=all-library-response.dwl')]" mediaType="application/java" encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		
+		<munit:execution >
+		
+			<munit:set-event doc:name="Set Event for fetch all library" doc:id="0117f3ab-3108-401b-89ba-d0ce0a643f85" />
+			
+			<flow-ref doc:name="Flow-ref to get:\libraries-system:library-system-api-config" doc:id="c4a85bfa-b4ae-4d23-86c9-11a1114a1f7d" name="get:\libraries-system:library-system-api-config"/>
+		
+		</munit:execution>
+		
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals for fetch all libraries" doc:id="0b980ccd-9c9b-4c61-b4f3-d4886ac86955" actual="#[payload]" expected="#[readUrl('classpath://fetch=all-library-response.dwl')]" message="fetch all library success !"/>
+		</munit:validation>
+		
+	</munit:test>
+	<munit:test name="fetch-all-library-system-test-suiteTest" doc:id="e9c46c01-1e3c-4aba-8bc8-356781cd5819" description="while fetching al library library:not_found error raise" expectedErrorType="LIBRARY:NOT_FOUND" expectedErrorDescription="No records found !!">
+	
+			<munit:behavior >
+			
+				<munit-tools:mock-when doc:name="Mock when slect all libraries" doc:id="0c3fb539-a0a7-4989-a806-ac8707f2cbff" processor="db:select">
+					<munit-tools:with-attributes >
+						<munit-tools:with-attribute whereValue="34af7021-0792-4278-adfa-1580250d9dab" attributeName="doc:id" />
+					</munit-tools:with-attributes>
+					<munit-tools:then-return >
+						<munit-tools:payload value="#[[]]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:then-return>
+				</munit-tools:mock-when>
+				
+			</munit:behavior>
+			
+			<munit:execution >
+			
+				<munit:set-event doc:name="Set Event for fetch all libraries error" doc:id="d9fada57-4147-4c9c-916c-1094114f00e4" />
+				
+				<flow-ref doc:name="Flow-ref to get:\libraries-system:library-system-api-config" doc:id="b5ad1287-2229-456b-a600-d05e02de6bd1" name="get:\libraries-system:library-system-api-config"/>
+			
+			</munit:execution>
+		
+	</munit:test>
+
+</mule>

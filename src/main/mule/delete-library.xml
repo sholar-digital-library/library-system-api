@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="delete:\library:library-system-config">
+        <logger level="INFO" doc:name="Start" doc:id="94f162d8-2391-4e73-abdb-24704f4eb9f0" message="Enter into delete library flow"/>
+		<set-variable value="#[attributes.queryParams.library_code]" doc:name="library_code variable" doc:id="52396601-5e17-4351-8995-607ff46be639" variableName="library_code"/>
+		<db:select doc:name="Select library details based on library_code" doc:id="23630b4a-fd57-4daa-8d92-66cae4daeb5e" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * from scholarlibraries.library WHERE library_code = :library_code;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	library_code: vars.library_code
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="ed4f4f34-6c37-47ef-bae1-ee1692c4d64a" >
+			<when expression="#[payload != []]">
+				<db:delete doc:name="Delete library details based on library_code" doc:id="8c003d71-0c42-46cf-9fe1-6b78282d753b" config-ref="Database_Config">
+			<db:sql><![CDATA[DELETE FROM scholarlibraries.library WHERE library_code = :library_code;]]></db:sql>
+			<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	library_code: vars.library_code
+}]]]></db:input-parameters>
+		</db:delete>
+				<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	library_code: vars.library_code,
+	message: "Library details deleted successfully !"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise >
+				<raise-error doc:name="Raise error" doc:id="369d85a4-4744-4fd6-9d8f-50837541cc26" type="LIBRARY:NOT_FOUND" description="The library code is not found !!"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="fa72ce1d-685d-497d-8dc0-b2b818ca42c5" message="Return from delete library flow"/>
+    
+</flow>
+</mule>

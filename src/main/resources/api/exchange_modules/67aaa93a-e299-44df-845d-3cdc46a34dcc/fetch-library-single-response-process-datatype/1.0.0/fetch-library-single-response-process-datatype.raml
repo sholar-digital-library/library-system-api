@@ -1,0 +1,59 @@
+#%RAML 1.0 DataType
+
+description: Thgis datatype is for the response payload of the fetch single library details based on library code in process layer
+
+type: object
+properties:
+  library_code:
+    type: string
+    required: true
+    example: "LIB123"
+  address:
+    type: string
+    required: true
+    example: "No.36, Ayyappa society, Madhapur, Hyderabad-500008"
+  library_phone_no:
+    type: number
+    required: true
+    example: 04024455667
+  library_email:
+    type: string
+    required: true
+    example: "scholar.madhapur@gmail.com"
+  books:
+    type: array
+    items:
+      type: object
+      properties:
+        book_code:
+          type: string
+          required: true
+          example: "BK123"
+        book_title:
+          type: string
+          required: true
+          example: "Master min"
+        book_author:
+          type: string
+          required: true
+          example: "Vinod Sharma"
+        book_category:
+          type: string
+          required: true
+          example: "Novel"
+        book_read_time_hrs:
+          type: number
+          required: true
+          example: 36
+        book_rental_price:
+          type: number
+          required: true
+          example: 100
+        book_rating:
+          type: number
+          required: true
+          example: 4.5
+        best_seller: 
+          type: string
+          required: true
+          example: "No"

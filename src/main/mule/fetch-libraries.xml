@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="get:\libraries:library-system-config">
+        <logger level="INFO" doc:name="Start" doc:id="da9f179c-bc2e-4426-b01c-a9e7a6cfee90" message="Enter into the fetch libraries flow"/>
+		<db:select doc:name="Select all the library details " doc:id="76b692ab-9fb6-4207-b24f-ba93e3826b35" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM scholarlibraries.library;]]></db:sql>
+		</db:select>
+		<choice doc:name="Choice" doc:id="823198f5-ab5f-45f9-b9de-f962465f30f7" >
+			<when expression="#[payload != []]">
+				<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	library_code: payload01.library_code,
+	library_email: payload01.library_email,
+	address: payload01.address,
+	library_branch_name: payload01.library_branch_name,
+	library_phone_no: payload01.library_phone_no
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise >
+				<raise-error doc:name="Raise error" doc:id="de7d09c6-cf37-403e-883c-cb274944ad6d" type="LIBRARY:NOT_FOUND" description="No records found !!"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="52049fe2-f2d3-4897-8205-82a0f3e538ea" message="Return from the fetch libraries flow"/>
+    
+</flow>	
+</mule>

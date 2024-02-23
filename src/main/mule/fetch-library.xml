@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="get:\library:library-system-config">
+        <logger level="INFO" doc:name="Start" doc:id="e26a66ed-3d80-47ca-8e08-51ae98b4de75" message="Enter into fetch library flow"/>
+		<db:select doc:name="Select library details based on library_code" doc:id="9423ea6f-33b4-41e8-b7e5-e065fa01ee3f" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM scholarlibraries.library WHERE library_code = :library_code;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	library_code: attributes.queryParams.library_code
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="e2e5cf9e-fc80-4454-8684-518e66e1f7a1" >
+			<when expression="#[payload != []]">
+				<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	library_code: payload[0].library_code,
+	library_email: payload[0].library_email,
+	address: payload[0].address,
+	library_branch_name: payload[0].library_branch_name,
+	library_phone_no: payload[0].library_phone_no
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise >
+				<raise-error doc:name="Raise error" doc:id="072f49a1-036a-4702-a16a-e7a27e8f57bf" type="LIBRARY:NOT_FOUND" description="The library code is not found !!"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="ee92700b-25b6-4f71-ac5b-6224054a31e9" message="Return from the fetch library flow"/>
+    
+</flow>		
+</mule>

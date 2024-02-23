@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	
+	<flow name="put:\library-system:application\json:library-system-api-config" doc:id="1ceba9d8-8cce-44b1-9f55-d05b6615226f">
+        <logger level="INFO" doc:name="start" doc:id="4fd19a1f-f361-48d6-840f-3ebbc06dea29" message="Enter into update library flow "/>
+		<logger level="INFO" doc:name="set variable for library code" doc:id="2056776c-80b7-48c8-a753-b7dc21e6bc8b" message="set variable for library code"/>
+		<set-variable value="#[attributes.queryParams.library_code]" doc:name="library_code variable" doc:id="381fad14-bd9d-4b74-833f-fb01ee1b4373" variableName="library_code"/>
+		<logger level="INFO" doc:name="library data as variable" doc:id="37fed11d-e0af-420f-889d-06f2f7fcbf5d" message="setting payload data as variable "/>
+		<set-variable value="#[payload]" doc:name="Set Variable for library data" doc:id="6d3d1ae5-f68b-470f-98f4-dec75cc2801c" variableName="library_details"/>
+		<logger level="INFO" doc:name="Validating user" doc:id="8d5006e3-b203-4e10-8894-740289008fe4" message="Requesting for validating user"/>
+		<http:request method="GET" doc:name="Request for validating user" doc:id="4d06d11e-d4ca-4ef5-ad18-7b9d2d8da441" config-ref="HTTP_Request_configuration_for_user_process_api" path="/${user-process-api.validate-user}" target="user_data">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "Value",
+	"client_id" : "Value"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"corelation-id" : attributes.headers."correlation-id"
+}]]]></http:query-params>
+		</http:request>
+		<choice doc:name="Choice" doc:id="a6614474-7062-4340-a899-172d1cc4a0f0" >
+			<when expression="#[upper(vars.user_data.user_role) == 'ADMIN']">
+				<logger level="INFO" doc:name="Role of user" doc:id="f6711c71-eed1-4ed2-9af4-058885a3a2cf" message="user role is ADMIN"/>
+				<logger level="INFO" doc:name="check for library" doc:id="2fe69b47-1f4b-452d-8109-340bab264fbb" message="Fetching libraray details based on library code from database" />
+				<db:select doc:name="Select library based on library code" doc:id="f881ce8d-3ed6-4262-ad76-52d9e3e778c0" config-ref="Database_configuration_for_library_system_api">
+			<db:sql><![CDATA[SELECT * from scholarlibraries.library WHERE library_code = :library_code;]]></db:sql>
+			<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	library_code: vars.library_code
+}]]]></db:input-parameters>
+		</db:select>
+				<logger level="INFO" doc:name="make choice" doc:id="a360bf5e-336b-490f-a0be-798725ccba72" message="making choice based on library exist or not !" />
+				<choice doc:name="Choice" doc:id="a4f73121-08d8-4942-9f6f-a0d7f4bf044b">
+			<when expression="#[payload != []]">
+				<logger level="INFO" doc:name="library exist" doc:id="7e2cd813-78a6-4130-8203-ecbf8a0a12ce" message="The library is found based on library code" />
+				<logger level="INFO" doc:name="update library" doc:id="100f8cef-1278-4d21-ac2f-f8e68ca8f20a" message="Updating details of libaray based on library code" />
+				<db:update doc:name="Update library details based on libraray code" doc:id="788c861a-cfef-4851-9c2e-323003158e21" config-ref="Database_configuration_for_library_system_api">
+					<db:sql><![CDATA[UPDATE scholarlibraries.library SET library_branch_name=:library_branch_name,library_phone_no=:library_phone_no,library_email=:library_email,address=:address WHERE library_code=:library_code;]]></db:sql>
+					<db:input-parameters><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	library_code: vars.library_code,
+	library_email: vars.library_details.library_email,
+	address: vars.library_details.address,
+	library_branch_name: vars.library_details.library_branch_name,
+	library_phone_no: vars.library_details.library_phone_no as String
+}]]]></db:input-parameters>
+				</db:update>
+				<logger level="INFO" doc:name="update complete" doc:id="64488e19-f5d2-49e9-a911-1e9d167fb650" message="Updating libraray details is completed !" />
+				<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  library_code: vars.library_code,
+	message: "Library details updated successfully !"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Library not exist " doc:id="f3daa04a-11a9-48c1-949e-aca6932829d2" message="The libraray not found for this libraray code !" />
+				<raise-error doc:name="Raise error for libraray not found " doc:id="5f7f8ae7-24d1-44bc-90c8-8dba377d1f4f" type="LIBRARY:NOT_FOUND" description="The library code is not found !!" />
+			</otherwise>
+		</choice>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Role of user" doc:id="6a0c35f8-858c-4f76-8f4e-b930089b9c5e" message="user role is may be STUDENT OR USER"/>
+				<raise-error doc:name="Raise error for invalid user" doc:id="f201a55f-db8b-4197-8e31-acd978c34c4b" type="USER:INVALID" description="You don't have access :("/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="345af3c6-df46-4464-a4ab-d31142b98aa5" message="Return from update library flow !"/>
+    
+</flow>
+		
+</mule>
